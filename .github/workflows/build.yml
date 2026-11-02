@@ -13,22 +13,23 @@ jobs:
             campus_route_apk_project
           sparse-checkout-cone-mode: true
 
-      - name: 组装构建目录
+      - name: Assemble build dir
         run: |
           SRC=campus_route_apk_project
-          mkdir -p app
+          rm -rf app && mkdir -p app
           cp "$SRC/mobile/main.py" "$SRC/mobile/buildozer.spec" app/
           cp -r "$SRC/core" "$SRC/assets" app/
           cp "$SRC/campus_profile.json" app/
           sed -i 's/\r$//' app/buildozer.spec
+          sed -i '/^\[app\]/a android.accept_sdk_license = True' app/buildozer.spec
+          sed -i '/^\[app\]/a android.build_tools_version = 33.0.2' app/buildozer.spec
           ls app
 
-      - name: 构建 APK
-        uses: ArtemSBulgakov/buildozer-action@v1
-        with:
-          command: buildozer android debug
-          workdir: app
-          buildozer_version: stable
+      - name: Build APK with official buildozer image
+        run: |
+          docker run --rm -v "$PWD/app":/home/user/hostcwd \
+            kivy/buildozer:latest \
+            bash -lc "cd /home/user/hostcwd && buildozer -v android debug"
 
       - uses: actions/upload-artifact@v4
         with:
