@@ -43,7 +43,12 @@ jobs:
           export PATH="$SDK/cmdline-tools/latest/bin:$PATH"
           yes | sdkmanager --licenses > /dev/null || true
           sdkmanager --install "platform-tools" "platforms;android-33" "build-tools;33.0.2" > /dev/null
+          # 兼容 buildozer 的旧路径：tools/bin/sdkmanager
+          mkdir -p "$SDK/tools/bin"
+          printf '#!/usr/bin/env bash\nexec "%s/cmdline-tools/latest/bin/sdkmanager" "$@"\n' "$SDK" > "$SDK/tools/bin/sdkmanager"
+          chmod +x "$SDK/tools/bin/sdkmanager"
           echo "== build-tools =="; ls "$SDK/build-tools"
+          echo "== sdkmanager wrapper =="; "$SDK/tools/bin/sdkmanager" --version
 
       - name: 安装 buildozer
         run: |
